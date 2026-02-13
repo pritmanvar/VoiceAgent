@@ -102,12 +102,20 @@
     <!-- Controls -->
     <div class="relative w-full flex flex-col items-center mb-12">
       <!-- Session Control Button -->
-      <button
-        id="sessionBtn"
-        class="mb-8 px-6 py-2 rounded-full bg-green-600 hover:bg-green-500 font-bold transition-all shadow-md focus:outline-none"
-      >
-        Start Conversation
-      </button>
+      <div class="flex gap-4 mb-8">
+        <button
+          id="sessionBtn"
+          class="px-6 py-2 rounded-full bg-green-600 hover:bg-green-500 font-bold transition-all shadow-md focus:outline-none"
+        >
+          Start Conversation
+        </button>
+        <!-- <button
+          id="stopAudioBtn"
+          class="px-6 py-2 rounded-full bg-orange-600 hover:bg-orange-500 font-bold transition-all shadow-md focus:outline-none"
+        >
+          Stop Audio
+        </button> -->
+      </div>
 
       <div class="relative">
         <!-- Status Indicator (Non-clickable) -->
@@ -137,6 +145,7 @@
 
     <script>
       const sessionBtn = document.getElementById("sessionBtn");
+      const stopAudioBtn = document.getElementById("stopAudioBtn");
       const statusCircle = document.getElementById("statusCircle");
       const waveEffect = document.getElementById("waveEffect");
       const statusDiv = document.getElementById("status");
@@ -181,6 +190,18 @@
           const data = JSON.parse(event.data);
 
           if (data.type === "transcription") {
+            // Recived new answer of interupt so stop current speech/audio if playing
+            if (currentAudio) {
+              currentAudio.pause();
+              currentAudio.currentTime = 0;
+              currentAudio = null;
+            }
+            if (window.speechSynthesis) {
+              window.speechSynthesis.cancel();
+            }
+            audioQueue = [];
+            isPlaying = false;
+            
             addMessage("user", data.text);
           } else if (data.type === "response_text") {
             addMessage("ai", data.text);
@@ -281,6 +302,30 @@
           statusCircle.classList.replace("bg-blue-600", "bg-gray-700");
         }
       });
+
+      // stopAudioBtn.addEventListener("click", () => {
+      //   // Stop current audio if playing
+      //   if (currentAudio) {
+      //     currentAudio.pause();
+      //     currentAudio.currentTime = 0;
+      //     currentAudio = null;
+      //   }
+      //   // Clear audio queue
+      //   audioQueue = [];
+      //   isPlaying = false;
+      //   
+      //   // Stop browser TTS if active
+      //   if (window.speechSynthesis) {
+      //     window.speechSynthesis.cancel();
+      //   }
+      //   
+      //   console.log("Audio stopped by user");
+      //   
+      //   // Restart listening if session is active
+      //   if (sessionActive && !isRecording) {
+      //     startRecording();
+      //   }
+      // });
 
       let audioContext;
       let analyser;
